@@ -8,7 +8,6 @@ class CubicBezier {
     int endY = 0;
 
   private:
-    float precision = 0.1;
     int x1 = 0;
     int y1 = 0;
     int x2 = 0;
@@ -47,13 +46,5 @@ class CubicBezier {
       int Xc = (int)(pow3 * startX + pow2 * 3 * t * x1 + (1.0 - t) * 3 * pow(t, 2) * x2 + pow(t, 3) * endX);
       int Yc = (int)(pow((1.0 - t), 3) * startY + pow((1.0 - t), 2) * 3 * t * y1 + (1.0 - t) * 3 * pow(t, 2) * y2 + pow(t, 3) * endY);
       return Vector(Xc, Yc);
-    }
-
-    void setPrecision(float precision) {
-      this->precision = precision;
-    }
-
-    float getPrecision() {
-      return precision;
     }
 };
