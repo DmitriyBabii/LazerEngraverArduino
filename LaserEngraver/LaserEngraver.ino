@@ -10,10 +10,6 @@
 #define VOLTAGE_PIN A2
 #define LAZER_PIN 12
 
-CubicBezier cb = CubicBezier();
-Vector v = Vector(0, 0);
-char comand;
-
 const Lazer lazer = Lazer(DIR_PIN_X, STEPPER_PIN_X, DIR_PIN_Y, STEPPER_PIN_Y);
 
 void setup() {
@@ -35,7 +31,7 @@ void loop() {
 }
 
 void serialEvent() {
-  comand = (char)Serial.read();
+  char comand = (char)Serial.read();
   switch (comand) {
     case 'I':
       {
@@ -82,6 +78,9 @@ void serialEvent() {
         int y2 = Serial.parseInt();
         int endX = Serial.parseInt();
         int endY = Serial.parseInt();
+        
+        CubicBezier cb = CubicBezier();
+        Vector v = Vector(0, 0);
         cb.setFactors(x1, y1, x2, y2);
         cb.setPoints(lazer.getX(), lazer.getY(), endX, endY);
         for (float t = 0.0; t <= 1; t += conf::cubicPrecision) {
