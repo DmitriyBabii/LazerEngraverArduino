@@ -78,7 +78,7 @@ void serialEvent() {
         int y2 = Serial.parseInt();
         int endX = Serial.parseInt();
         int endY = Serial.parseInt();
-        
+
         CubicBezier cb = CubicBezier();
         Vector v = Vector(0, 0);
         cb.setFactors(x1, y1, x2, y2);
