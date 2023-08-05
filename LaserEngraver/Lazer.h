@@ -8,7 +8,11 @@ private:
   const int stepperPinX;
   const int dirPinY;
   const int stepperPinY;
+
   int speed = conf::speed;
+  int currentSpeed = speed;
+  int startX = 0;
+  int startY = 0;
   int currentX;
   int currentY;
 
@@ -18,16 +22,16 @@ private:
   }
 
   bool checkTimer(unsigned long timer, int delay) {
-    return (millis() - timer) >= delay;
+    return (millis() - timer) > delay;
   }
 
   void stepBy(int dirPin, bool dir, int stepperPin, int steps) {
     digitalWrite(dirPin, dir);
     for (int i = 0; i < steps; i++) {
       digitalWrite(stepperPin, HIGH);
-      delayMicroseconds(speed);
+      //delay(currentSpeed);
       digitalWrite(stepperPin, LOW);
-      delayMicroseconds(speed);
+      delay(currentSpeed);
     }
   }
 
@@ -66,11 +70,11 @@ public:
     int yDelay = 16;
 
     if (difX > difY) {
-      xDelay = speed / 1000;
+      xDelay = currentSpeed;
       float multiplier = (float)difX / difY;
       yDelay = xDelay * multiplier;
     } else {
-      yDelay = speed / 1000;
+      yDelay = currentSpeed;
       float multiplier = (float)difY / difX;
       xDelay = yDelay * multiplier;
     }
@@ -113,8 +117,24 @@ public:
     stepY(yDir, difY);
   }
 
+  void start(int x, int y) {
+    currentSpeed = conf::fastSpeed;
+    lineTo(x, y);
+    startX = x;
+    startY = y;
+    currentSpeed = speed;
+  }
+
   void reset() {
+    currentSpeed = conf::fastSpeed;
     lineTo(0, 0);
+    startX = 0;
+    startY = 0;
+    currentSpeed = speed;
+  }
+
+  void loopLine() {
+    lineTo(startX, startY);
   }
 
   int getX() {
@@ -123,5 +143,14 @@ public:
 
   int getY() {
     return currentY;
+  }
+
+  int getSpeed() {
+    return speed;
+  }
+
+  void setSpeed(int speed) {
+    this->speed = speed;
+    this->currentSpeed = speed;
   }
 };

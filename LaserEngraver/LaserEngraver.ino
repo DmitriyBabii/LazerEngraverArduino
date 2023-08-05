@@ -11,6 +11,7 @@
 #define LAZER_PIN 12
 
 const Lazer lazer = Lazer(DIR_PIN_X, STEPPER_PIN_X, DIR_PIN_Y, STEPPER_PIN_Y);
+double accuracy = conf::cubicPrecision;
 
 void setup() {
   // register pins
@@ -21,10 +22,11 @@ void setup() {
   pinMode(CONNECT_PIN, OUTPUT);
   pinMode(START_PIN, OUTPUT);
   pinMode(VOLTAGE_PIN, INPUT);
+  pinMode(LAZER_PIN, OUTPUT);
 
   // start serial and set parameters
   Serial.begin(9600);
-  Serial.setTimeout(40);
+  Serial.setTimeout(20);
 }
 
 void loop() {
@@ -43,7 +45,7 @@ void serialEvent() {
         digitalWrite(START_PIN, HIGH);
         int x = Serial.parseInt();
         int y = Serial.parseInt();
-        lazer.lineTo(x, y);
+        lazer.start(x, y);
         digitalWrite(LAZER_PIN, HIGH);
         delay(50);
         Serial.write('O');
@@ -83,21 +85,22 @@ void serialEvent() {
         Vector v = Vector(0, 0);
         cb.setFactors(x1, y1, x2, y2);
         cb.setPoints(lazer.getX(), lazer.getY(), endX, endY);
-        for (float t = 0.0; t <= 1; t += conf::cubicPrecision) {
+        for (float t = 0.0; t <= 1.0; t += accuracy) {
+          t = roundToDecimalPlaces(t, 2);
           v = cb.getPoint(t);
           lazer.lineTo(v.x, v.y);
         }
-        v = cb.getPoint(1);
-        lazer.lineTo(v.x, v.y);
+
+        // shouldnt be here
+        // v = cb.getPoint(1);
+        // lazer.lineTo(v.x, v.y);
+
         Serial.write('O');
         break;
       }
-
     case 'Z':
       {
-        int x = Serial.parseInt();
-        int y = Serial.parseInt();
-        lazer.lineTo(x, y);
+        lazer.loopLine();
         digitalWrite(START_PIN, LOW);
         digitalWrite(LAZER_PIN, LOW);
         Serial.write('O');
@@ -106,13 +109,19 @@ void serialEvent() {
     case 'E':
       {
         digitalWrite(LAZER_PIN, LOW);
+        Serial.write('O');
+        break;
+      }
+    case 'R':
+      {
+        digitalWrite(LAZER_PIN, LOW);
         lazer.reset();
         digitalWrite(START_PIN, LOW);
         Serial.write('O');
         break;
       }
   }
-  clearBuff();
+  //clearBuff();
 }
 
 void makeInstruction(String comandLine) {
@@ -124,14 +133,36 @@ void makeInstruction(String comandLine) {
     Serial.write('O');
   }
   if (comandLine.indexOf(" R") != -1) {
+    digitalWrite(LAZER_PIN, LOW);
     lazer.reset();
     digitalWrite(START_PIN, LOW);
     Serial.write('O');
   }
+
+  int parameterValueStart;
+  if ((parameterValueStart = comandLine.indexOf("A ")) != -1) {
+    parameterValueStart += 2;
+    String parameterValueStr = comandLine.substring(parameterValueStart);
+    accuracy = strtod(parameterValueStr.c_str(), NULL);
+    Serial.write('O');
+  }
+  if ((parameterValueStart = comandLine.indexOf("S ")) != -1) {
+    parameterValueStart += 2;
+    String parameterValueStr = comandLine.substring(parameterValueStart);
+    lazer.setSpeed(parameterValueStr.toInt());
+    Serial.write('O');
+  }
+
+  clearBuff();
 }
 
 void clearBuff() {
   while (Serial.available()) {
     Serial.read();
   }
+}
+
+float roundToDecimalPlaces(float number, int decimalPlaces) {
+  float multiplier = pow(10.0, decimalPlaces);
+  return round(number * multiplier) / multiplier;
 }
