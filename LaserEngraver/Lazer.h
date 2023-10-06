@@ -1,184 +1,210 @@
+#include "Configure.h"
+
 class Lazer {
-  private:
-    const boolean XForward = false;
-    const boolean YForward = true;
-    const int dirPinX;
-    const int stepperPinX;
-    const int dirPinY;
-    const int stepperPinY;
-    int speed = 30000;
-    int currentX;
-    int currentY;
+private:
+  const bool XForward = false;
+  const bool YForward = true;
+  const int dirPinX;
+  const int stepperPinX;
+  const int dirPinY;
+  const int stepperPinY;
 
-    void steppersOff() {
-      digitalWrite(stepperPinX, LOW);
-      digitalWrite(stepperPinY, LOW);
+  int speed = conf::speed;
+  int currentSpeed = speed;
+  int startX = 0;
+  int startY = 0;
+  int currentX;
+  int currentY;
+
+  void steppersOff() {
+    digitalWrite(stepperPinX, LOW);
+    digitalWrite(stepperPinY, LOW);
+  }
+
+  bool checkTimer(unsigned long timer, int delay) {
+    return (millis() - timer) > delay;
+  }
+
+  void stepBy(int dirPin, bool dir, int stepperPin, int steps) {
+    digitalWrite(dirPin, dir);
+    for (int i = 0; i < steps; i++) {
+      digitalWrite(stepperPin, HIGH);
+      //delay(currentSpeed);
+      digitalWrite(stepperPin, LOW);
+      delay(currentSpeed);
     }
+  }
 
-    bool checkTimer(unsigned long timer, int delay) {
-      return (millis() - timer) >= delay;
-    }
+  void stepX(bool dir, int steps) {
+    stepBy(dirPinX, dir, stepperPinX, steps);
+  }
 
-  public:
-    Lazer(int dirPinX, int stepperPinX, int dirPinY, int stepperPinY)
-      : dirPinX(dirPinX), stepperPinX(stepperPinX), dirPinY(dirPinY), stepperPinY(stepperPinY) {
-      this->currentX = 0;
-      this->currentY = 0;
-    }
+  void stepY(bool dir, int steps) {
+    stepBy(dirPinY, dir, stepperPinY, steps);
+  }
 
-    void stepX(boolean dir, int steps) {
-      digitalWrite(dirPinX, dir);
-      for (int i = 0; i < steps; i++) {
-        digitalWrite(stepperPinX, HIGH);
-        delayMicroseconds(speed);
-        digitalWrite(stepperPinX, LOW);
-        delayMicroseconds(speed);
-      }
-    }
+public:
+  Lazer(int dirPinX, int stepperPinX, int dirPinY, int stepperPinY)
+    : dirPinX(dirPinX), stepperPinX(stepperPinX), dirPinY(dirPinY), stepperPinY(stepperPinY) {
+    this->currentX = 0;
+    this->currentY = 0;
+  }
 
-    void stepY(boolean dir, int steps) {
-      digitalWrite(dirPinY, dir);
-      for (int i = 0; i < steps; i++) {
-        digitalWrite(stepperPinY, HIGH);
-        delayMicroseconds(speed);
-        digitalWrite(stepperPinY, LOW);
-        delayMicroseconds(speed);
-      }
-    }
+  // void lineTo(int x, int y) {
+  //   int difX = x - this->currentX;
+  //   int difY = y - this->currentY;
+  //   this->currentX += difX;
+  //   this->currentY += difY;
+  //   bool xDir = (difX >= 0) ? XForward : !XForward;
+  //   bool yDir = (difY >= 0) ? YForward : !YForward;
+  //   difX = abs(difX);
+  //   difY = abs(difY);
 
-    void lineTo(int x, int y) {
-      int difX =  x - this->currentX;
-      int difY =  y - this->currentY;
-      this->currentX += difX;
-      this->currentY += difY;
-      bool xDir = (difX >= 0) ? XForward : !XForward;
-      bool yDir = (difY >= 0) ? YForward : !YForward;
-      difX = abs(difX);
-      difY = abs(difY);
+  //   if (difX == 0 || difY == 0) {
+  //     stepX(xDir, difX);
+  //     stepY(yDir, difY);
+  //     return;
+  //   }
 
-      if (difX == 0 || difY == 0) {
-        stepX(xDir, difX);
-        stepY(yDir, difY);
-        return;
-      }
+  //   unsigned long xDelay, yDelay;
+  //   int speed = currentSpeed * 1000;
 
-      int xDelay = 16;
-      int yDelay = 16;
+  //   if (difX > difY) {
+  //     xDelay = speed;
+  //     float multiplier = (float)difX / difY;
+  //     yDelay = xDelay * multiplier;
+  //   } else {
+  //     yDelay = speed;
+  //     float multiplier = (float)difY / difX;
+  //     xDelay = yDelay * multiplier;
+  //   }
 
-      if (difX > difY) {
-        xDelay = speed / 1000;
-        float multiplier = (float)difX / difY;
-        yDelay = xDelay * multiplier;
-      } else {
-        yDelay = speed / 1000;
-        float multiplier = (float)difY / difX;
-        xDelay = yDelay * multiplier;
-      }
+  //   unsigned long xTimer = micros();
+  //   unsigned long yTimer = micros();
 
-      unsigned long xTimer = millis();
-      unsigned long yTimer = millis();
+  //   digitalWrite(dirPinX, xDir);
+  //   digitalWrite(dirPinY, yDir);
 
-      digitalWrite(dirPinX, xDir);
-      digitalWrite(dirPinY, yDir);
+  //   while (difX > 0 || difY > 0) {
+  //     steppersOff();
+  //     if (difX > 0 && (micros() - xTimer) >= xDelay) {
+  //       xTimer = micros();
+  //       digitalWrite(stepperPinX, HIGH);
+  //       difX--;
+  //     }
+  //     if (difY > 0 && (micros() - yTimer) >= yDelay) {
+  //       yTimer = micros();
+  //       digitalWrite(stepperPinY, HIGH);
+  //       difY--;
+  //     }
+  //   }
+  //   steppersOff();
 
-      while (difX > 0 || difY > 0) {
-        steppersOff();
-        if (difX > 0 && checkTimer(xTimer, xDelay)) {
-          digitalWrite(stepperPinX, HIGH);
-          difX--;
-          xTimer = millis();
-        }
-        if (difY > 0 && checkTimer(yTimer, yDelay)) {
-          digitalWrite(stepperPinY, HIGH);
-          difY--;
-          yTimer = millis();
-        }
-      }
-      steppersOff();
-    }
+  //   // NEW
+  //   // while ((micros() - yTimer) < yDelay) {
+  //   // }
 
+  //   // Serial.write('D');
+  //   // digitalWrite(13, HIGH);
+  // }
 
-    //    void lineTo(int x, int y) {
-    //      int difX =  x - this->currentX;
-    //      int difY =  y - this->currentY;
-    //      this->currentX += difX;
-    //      this->currentY += difY;
-    //      bool xDir = (difX >= 0) ? XForward : !XForward;
-    //      bool yDir = (difY >= 0) ? YForward : !YForward;
-    //      difX = abs(difX);
-    //      difY = abs(difY);
-    //
-    //      if (difX == 0) {
-    //        stepY(yDir, difY);
-    //        return;
-    //      } else if (difY == 0) {
-    //        stepX(xDir, difX);
-    //        return;
-    //      }
-    //
-    //      if (difX < difY) {
-    //        int stepsForY = difY / difX;
-    //        while (difX > 0 || difY > 0) {
-    //          if (difY > 0) {
-    //            stepY(yDir, stepsForY);
-    //            difY -= stepsForY;
-    //          }
-    //          if (difX > 0) {
-    //            stepX(xDir, 1);
-    //            difX -= 1;
-    //          }
-    //        }
-    //      } else {
-    //        int stepsForX = difX / difY;
-    //        while (difX > 0 || difY > 0) {
-    //          if (difY > 0) {
-    //            stepY(yDir, 1);
-    //            difY -= 1;
-    //          }
-    //          if (difX > 0) {
-    //            stepX(xDir, stepsForX);
-    //            difX -= stepsForX;
-    //          }
-    //          stepX(xDir, stepsForX);
-    //          stepY(yDir, 1);
-    //          difX -= stepsForX;
-    //          difY -= 1;
-    //        }
-    //      }
-    //    }
+  void lineTo(int x, int y) {
+    int difX = x - this->currentX;
+    int difY = y - this->currentY;
+    this->currentX += difX;
+    this->currentY += difY;
+    bool xDir = (difX >= 0) ? XForward : !XForward;
+    bool yDir = (difY >= 0) ? YForward : !YForward;
+    difX = abs(difX);
+    difY = abs(difY);
 
-    void lineToH(int x) {
-      int difX =  x - this->currentX;
-      this->currentX += difX;
-      bool xDir = (difX >= 0) ? XForward : !XForward;
-      difX = abs(difX);
+    if (difX == 0 || difY == 0) {
       stepX(xDir, difX);
-    }
-
-    void lineToV(int y) {
-      int difY =  y - this->currentY;
-      this->currentY += difY;
-      bool yDir = (difY >= 0) ? YForward : !YForward;
-      difY = abs(difY);
       stepY(yDir, difY);
+      return;
     }
 
-    void reset() {
-      lineTo(0, 0);
+    int xDelay = 16;
+    int yDelay = 16;
+
+    if (difX > difY) {
+      xDelay = currentSpeed;
+      float multiplier = (float)difX / difY;
+      yDelay = xDelay * multiplier;
+    } else {
+      yDelay = currentSpeed;
+      float multiplier = (float)difY / difX;
+      xDelay = yDelay * multiplier;
     }
 
-    int getX() {
-      return currentX;
-    }
+    unsigned long xTimer = millis();
+    unsigned long yTimer = millis();
 
-    int getY() {
-      return currentY;
-    }
+    digitalWrite(dirPinX, xDir);
+    digitalWrite(dirPinY, yDir);
 
-    void print() {
-      Serial.print("x:");
-      Serial.println(currentX);
-      Serial.print("y:");
-      Serial.println(currentY);
+    while (difX > 0 || difY > 0) {
+      steppersOff();
+      if (difX > 0 && checkTimer(xTimer, xDelay)) {
+        digitalWrite(stepperPinX, HIGH);
+        difX--;
+        xTimer = millis();
+      }
+      if (difY > 0 && checkTimer(yTimer, yDelay)) {
+        digitalWrite(stepperPinY, HIGH);
+        difY--;
+        yTimer = millis();
+      }
     }
+    steppersOff();
+  }
+
+  void lineToH(int x) {
+    int difX = x - this->currentX;
+    this->currentX += difX;
+    bool xDir = (difX >= 0) ? XForward : !XForward;
+    difX = abs(difX);
+    stepX(xDir, difX);
+  }
+
+  void lineToV(int y) {
+    int difY = y - this->currentY;
+    this->currentY += difY;
+    bool yDir = (difY >= 0) ? YForward : !YForward;
+    difY = abs(difY);
+    stepY(yDir, difY);
+  }
+
+  void start(int x, int y) {
+    lineTo(x, y);
+    startX = x;
+    startY = y;
+  }
+
+  void reset() {
+    lineTo(0, 0);
+    startX = 0;
+    startY = 0;
+  }
+
+  void loopLine() {
+    lineTo(startX, startY);
+  }
+
+  int getX() {
+    return currentX;
+  }
+
+  int getY() {
+    return currentY;
+  }
+
+  int getSpeed() {
+    return speed;
+  }
+
+  void setSpeed(int speed) {
+    this->speed = speed;
+    this->currentSpeed = speed;
+  }
 };
