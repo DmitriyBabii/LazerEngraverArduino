@@ -50,6 +50,64 @@ public:
     this->currentY = 0;
   }
 
+  // void lineTo(int x, int y) {
+  //   int difX = x - this->currentX;
+  //   int difY = y - this->currentY;
+  //   this->currentX += difX;
+  //   this->currentY += difY;
+  //   bool xDir = (difX >= 0) ? XForward : !XForward;
+  //   bool yDir = (difY >= 0) ? YForward : !YForward;
+  //   difX = abs(difX);
+  //   difY = abs(difY);
+
+  //   if (difX == 0 || difY == 0) {
+  //     stepX(xDir, difX);
+  //     stepY(yDir, difY);
+  //     return;
+  //   }
+
+  //   unsigned long xDelay, yDelay;
+  //   int speed = currentSpeed * 1000;
+
+  //   if (difX > difY) {
+  //     xDelay = speed;
+  //     float multiplier = (float)difX / difY;
+  //     yDelay = xDelay * multiplier;
+  //   } else {
+  //     yDelay = speed;
+  //     float multiplier = (float)difY / difX;
+  //     xDelay = yDelay * multiplier;
+  //   }
+
+  //   unsigned long xTimer = micros();
+  //   unsigned long yTimer = micros();
+
+  //   digitalWrite(dirPinX, xDir);
+  //   digitalWrite(dirPinY, yDir);
+
+  //   while (difX > 0 || difY > 0) {
+  //     steppersOff();
+  //     if (difX > 0 && (micros() - xTimer) >= xDelay) {
+  //       xTimer = micros();
+  //       digitalWrite(stepperPinX, HIGH);
+  //       difX--;
+  //     }
+  //     if (difY > 0 && (micros() - yTimer) >= yDelay) {
+  //       yTimer = micros();
+  //       digitalWrite(stepperPinY, HIGH);
+  //       difY--;
+  //     }
+  //   }
+  //   steppersOff();
+
+  //   // NEW
+  //   // while ((micros() - yTimer) < yDelay) {
+  //   // }
+
+  //   // Serial.write('D');
+  //   // digitalWrite(13, HIGH);
+  // }
+
   void lineTo(int x, int y) {
     int difX = x - this->currentX;
     int difY = y - this->currentY;
@@ -118,19 +176,15 @@ public:
   }
 
   void start(int x, int y) {
-    currentSpeed = conf::fastSpeed;
     lineTo(x, y);
     startX = x;
     startY = y;
-    currentSpeed = speed;
   }
 
   void reset() {
-    currentSpeed = conf::fastSpeed;
     lineTo(0, 0);
     startX = 0;
     startY = 0;
-    currentSpeed = speed;
   }
 
   void loopLine() {

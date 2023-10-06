@@ -106,6 +106,12 @@ void serialEvent() {
         Serial.write('O');
         break;
       }
+    case 'N':
+      {
+        digitalWrite(LAZER_PIN, HIGH);
+        Serial.write('O');
+        break;
+      }
     case 'E':
       {
         digitalWrite(LAZER_PIN, LOW);
